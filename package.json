@@ -1,0 +1,30 @@
+{
+  "name": "printapp",
+  "version": "1.0.0",
+  "description": "PDF OCR and Notion Integration App with Printing",
+  "main": "src/main/index.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "electron",
+    "pdf",
+    "ocr",
+    "notion",
+    "print"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@notionhq/client": "^2.2.14",
+    "dotenv": "^16.5.0",
+    "electron": "^29.0.1",
+    "iconv-lite": "^0.6.3",
+    "tesseract.js": "^5.0.4"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.1"
+  }
+}

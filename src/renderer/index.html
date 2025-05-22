@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PrintApp - OCR & Notion Integration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>PrintApp</h1>
+    <p>PDFファイルをドラッグ＆ドロップしてください</p>
+    
+    <div id="drop-area">
+      <p>ここにPDFファイルをドロップ</p>
+      <div id="file-info"></div>
+    </div>
+    
+    <div id="document-details" style="display: none; margin-top: 20px;">
+      <div class="form-group">
+        <label for="document-title">文書タイトル (OCRから抽出):</label>
+        <input type="text" id="document-title" class="form-control">
+      </div>
+      <div class="form-group">
+        <label for="document-type">文書種別:</label>
+        <input type="text" id="document-type" class="form-control" placeholder="契約書、請求書など">
+      </div>
+    </div>
+    
+    <div id="status-area">
+      <div id="status-message"></div>
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+    </div>
+    
+    <div id="result-area">
+      <h2>処理結果</h2>
+      <div id="ocr-result" class="result-box">
+        <h3>OCR結果</h3>
+        <div id="ocr-text"></div>
+      </div>
+      
+      <div id="tags-result" class="result-box">
+        <h3>タグ</h3>
+        <div id="tags-list"></div>
+      </div>
+      
+      <div id="notion-result" class="result-box">
+        <h3>Notion連携</h3>
+        <div id="notion-status"></div>
+      </div>
+      
+      <div id="print-result" class="result-box">
+        <h3>印刷</h3>
+        <div id="print-status"></div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="index.js"></script>
+</body>
+</html>
