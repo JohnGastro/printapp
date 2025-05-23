@@ -6,8 +6,7 @@ contextBridge.exposeInMainWorld('api', {
   // File operations
   saveDroppedFile: (fileData) => ipcRenderer.invoke('save-dropped-file', fileData),
   
-  // OCR processing
-  processOCR: (filePath) => ipcRenderer.invoke('process-ocr', filePath),
+  // OCR processing removed
   
   // Tag generation
   generateTags: (data) => ipcRenderer.invoke('generate-tags', data),

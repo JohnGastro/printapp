@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusMessage = document.getElementById('status-message');
   const progressBar = document.getElementById('progress-bar');
   const resultArea = document.getElementById('result-area');
-  const ocrText = document.getElementById('ocr-text');
   const tagsList = document.getElementById('tags-list');
   const notionStatus = document.getElementById('notion-status');
   const printStatus = document.getElementById('print-status');
@@ -85,29 +84,17 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(`ファイル保存エラー: ${saveResult.error}`);
       }
       
-      // Process OCR
-      updateStatus('OCR処理中...', true);
+      updateStatus('ファイル処理中...', true);
       updateProgress(40);
       documentDetails.style.display = 'block';
-      const ocrResult = await window.api.processOCR(saveResult.filePath);
       
-      if (!ocrResult.success) {
-        throw new Error(`OCR処理エラー: ${ocrResult.error}`);
-      }
-      
-      // Display OCR result
-      ocrText.textContent = ocrResult.text;
-      
-      if (ocrResult.title) {
-        documentTitle.value = ocrResult.title;
-      }
+      documentTitle.value = file.name;
       
       // Generate tags
       updateStatus('タグを生成中...', true);
       updateProgress(60);
       const tagsResult = await window.api.generateTags({
-        fileName: file.name,
-        content: ocrResult.text
+        fileName: file.name
       });
       
       if (!tagsResult.success) {
@@ -128,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateProgress(80);
       const notionResult = await window.api.saveToNotion({
         title: documentTitle.value || file.name,
-        text: ocrResult.text,
         tags: tagsResult.tags,
         filePath: saveResult.filePath,
         documentType: documentType.value || ''

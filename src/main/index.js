@@ -3,11 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const iconv = require('iconv-lite');
-const { createWorker } = require('tesseract.js');
 const { Client } = require('@notionhq/client');
 require('dotenv').config();
-const { PDFDocument } = require('pdf-lib');
-const { createCanvas } = require('canvas');
 
 
 // Path to store temporary PDF files
@@ -18,37 +15,6 @@ if (!fs.existsSync(INPUT_PDF_DIR)) {
   fs.mkdirSync(INPUT_PDF_DIR, { recursive: true });
 }
 
-async function convertPdfToImage(pdfPath, pageNum = 0) {
-  try {
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
-    
-    const workerPath = path.join(__dirname, '../../node_modules/pdfjs-dist/legacy/build/pdf.worker.js');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
-    
-    const pdfData = new Uint8Array(fs.readFileSync(pdfPath));
-    
-    const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-    const pdf = await loadingTask.promise;
-    
-    const page = await pdf.getPage(pageNum + 1); // Pages are 1-based in PDF.js
-    
-    const viewport = page.getViewport({ scale: 300 / 72 }); // 300 DPI / 72 (PDF default DPI)
-    
-    // Create a canvas with the right dimensions
-    const canvas = createCanvas(viewport.width, viewport.height);
-    const context = canvas.getContext('2d');
-    
-    await page.render({
-      canvasContext: context,
-      viewport: viewport
-    }).promise;
-    
-    return canvas.toBuffer('image/png');
-  } catch (error) {
-    console.error('Error converting PDF to image:', error);
-    throw error;
-  }
-}
 
 // Keep a global reference of the window object
 let mainWindow;
@@ -95,45 +61,15 @@ ipcMain.handle('save-dropped-file', async (event, fileData) => {
   }
 });
 
-// OCR processing
-ipcMain.handle('process-ocr', async (event, filePath) => {
-  try {
-    let imageData;
-    
-    if (filePath.toLowerCase().endsWith('.pdf')) {
-      console.log('Converting PDF to image before OCR processing');
-      imageData = await convertPdfToImage(filePath);
-      console.log('PDF conversion complete, file size:', imageData.length);
-    } else {
-      imageData = filePath;
-    }
-    
-    const worker = await createWorker('jpn');
-    const { data } = await worker.recognize(imageData);
-    await worker.terminate();
-    
-    let title = '';
-    const lines = data.text.split('\n').filter(line => line.trim() !== '');
-    if (lines.length > 0) {
-      title = lines[0].trim();
-    }
-    
-    return { success: true, text: data.text, title };
-  } catch (error) {
-    console.error('OCR processing error:', error);
-    return { success: false, error: error.message };
-  }
-});
+// OCR processing removed - functionality no longer needed
 
-// Generate tags from filename or content
-ipcMain.handle('generate-tags', async (event, { fileName, content }) => {
+// Generate tags from filename
+ipcMain.handle('generate-tags', async (event, { fileName }) => {
   try {
     // Simple tag generation from filename
     // Remove extension and split by common separators
     const nameWithoutExt = path.basename(fileName, path.extname(fileName));
     const tags = nameWithoutExt.split(/[_\-\s]/).filter(tag => tag.length > 0);
-    
-    // Could be extended with content-based tagging using NLP or AI
     
     return { success: true, tags };
   } catch (error) {
@@ -143,7 +79,7 @@ ipcMain.handle('generate-tags', async (event, { fileName, content }) => {
 });
 
 // Notion integration
-ipcMain.handle('save-to-notion', async (event, { title, text, tags, filePath, documentType }) => {
+ipcMain.handle('save-to-notion', async (event, { title, tags, filePath, documentType }) => {
   try {
     // Notion API requires an integration token and database ID
     const notionToken = process.env.NOTION_TOKEN;
@@ -165,7 +101,7 @@ ipcMain.handle('save-to-notion', async (event, { title, text, tags, filePath, do
       parent: { database_id: databaseId },
       properties: {
         "名前": {
-          title: [{ text: { content: title } }]
+          title: [{ text: { content: title || fileName } }]
         },
         "ファイル": {
           rich_text: [{ text: { content: fileName } }]
