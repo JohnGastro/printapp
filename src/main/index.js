@@ -20,9 +20,9 @@ if (!fs.existsSync(INPUT_PDF_DIR)) {
 
 async function convertPdfToImage(pdfPath, pageNum = 0) {
   try {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf.js');
+    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.js');
     
-    const workerPath = path.join(__dirname, '../../node_modules/pdfjs-dist/build/pdf.worker.mjs');
+    const workerPath = path.join(__dirname, '../../node_modules/pdfjs-dist/legacy/build/pdf.worker.js');
     pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
     
     const pdfData = new Uint8Array(fs.readFileSync(pdfPath));
