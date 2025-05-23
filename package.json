@@ -19,11 +19,15 @@
   "license": "ISC",
   "dependencies": {
     "@notionhq/client": "^2.2.14",
+    "canvas": "^3.1.0",
     "dotenv": "^16.5.0",
     "electron": "^29.0.1",
     "iconv-lite": "^0.6.3",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^5.2.133",
     "tesseract.js": "^5.0.4"
   },
+  "type": "commonjs",
   "devDependencies": {
     "electron-builder": "^24.9.1"
   }
