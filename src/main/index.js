@@ -6,6 +6,9 @@ const iconv = require('iconv-lite');
 const { createWorker } = require('tesseract.js');
 const { Client } = require('@notionhq/client');
 require('dotenv').config();
+const { PDFDocument } = require('pdf-lib');
+const { createCanvas } = require('canvas');
+
 
 // Path to store temporary PDF files
 const INPUT_PDF_DIR = path.join(__dirname, '../../input_pdf');
@@ -13,6 +16,38 @@ const INPUT_PDF_DIR = path.join(__dirname, '../../input_pdf');
 // Create input_pdf directory if it doesn't exist
 if (!fs.existsSync(INPUT_PDF_DIR)) {
   fs.mkdirSync(INPUT_PDF_DIR, { recursive: true });
+}
+
+async function convertPdfToImage(pdfPath, pageNum = 0) {
+  try {
+    const pdfjsLib = await import('pdfjs-dist/build/pdf.js');
+    
+    const workerPath = path.join(__dirname, '../../node_modules/pdfjs-dist/build/pdf.worker.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `file://${workerPath}`;
+    
+    const pdfData = new Uint8Array(fs.readFileSync(pdfPath));
+    
+    const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+    const pdf = await loadingTask.promise;
+    
+    const page = await pdf.getPage(pageNum + 1); // Pages are 1-based in PDF.js
+    
+    const viewport = page.getViewport({ scale: 300 / 72 }); // 300 DPI / 72 (PDF default DPI)
+    
+    // Create a canvas with the right dimensions
+    const canvas = createCanvas(viewport.width, viewport.height);
+    const context = canvas.getContext('2d');
+    
+    await page.render({
+      canvasContext: context,
+      viewport: viewport
+    }).promise;
+    
+    return canvas.toBuffer('image/png');
+  } catch (error) {
+    console.error('Error converting PDF to image:', error);
+    throw error;
+  }
 }
 
 // Keep a global reference of the window object
@@ -63,8 +98,18 @@ ipcMain.handle('save-dropped-file', async (event, fileData) => {
 // OCR processing
 ipcMain.handle('process-ocr', async (event, filePath) => {
   try {
+    let imageData;
+    
+    if (filePath.toLowerCase().endsWith('.pdf')) {
+      console.log('Converting PDF to image before OCR processing');
+      imageData = await convertPdfToImage(filePath);
+      console.log('PDF conversion complete, file size:', imageData.length);
+    } else {
+      imageData = filePath;
+    }
+    
     const worker = await createWorker('jpn');
-    const { data } = await worker.recognize(filePath);
+    const { data } = await worker.recognize(imageData);
     await worker.terminate();
     
     let title = '';
